@@ -2,7 +2,7 @@ package workers
 
 import (
 	"fmt"
-	//"runtime"
+	"runtime"
 	"time"
 )
 
@@ -19,7 +19,9 @@ func (l *MiddlewareLogging) Call(queue string, message *Msg, next func() bool) (
 		if e := recover(); e != nil {
 			Logger.Println(prefix, "fail:", time.Since(start))
 
-			Logger.Printf("%s error: %v\n", prefix, message.Get("error_message"))
+			buf := make([]byte, 4096)
+			buf = buf[:runtime.Stack(buf, false)]
+			Logger.Printf("%s error: %v\n%s", prefix, e, buf)
 
 			panic(e)
 		}
