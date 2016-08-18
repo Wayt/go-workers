@@ -27,7 +27,7 @@ func (r *MiddlewareRetry) Call(queue string, message *Msg, next func() bool) (ac
 
 				waitDuration := durationToSecondsWithNanoPrecision(
 					time.Duration(
-						secondsToDelay(retryCount),
+						secondsToDelay(message, retryCount),
 					) * time.Second,
 				)
 
@@ -86,7 +86,12 @@ func incrementRetry(message *Msg) (retryCount int) {
 	return
 }
 
-func secondsToDelay(count int) int {
-	power := math.Pow(float64(count), 4)
-	return int(power) + 15 + (rand.Intn(30) * (count + 1))
+func secondsToDelay(message *Msg, count int) int {
+
+	if param, err := message.Get("retry_interval").Int(); err == nil && param > 0 {
+		return param
+	} else {
+		power := math.Pow(float64(count), 4)
+		return int(power) + 15 + (rand.Intn(30) * (count + 1))
+	}
 }
