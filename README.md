@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/wayt/go-workers.png)](https://travis-ci.org/wayt/go-workers)
+[![Build Status](https://travis-ci.org/Wayt/go-workers.png)](https://travis-ci.org/Wayt/go-workers)
 [![GoDoc](https://godoc.org/github.com/wayt/go-workers?status.png)](https://godoc.org/github.com/wayt/go-workers)
 
 Forked from (https://github.com/jrallison/go-workers)[https://github.com/jrallison/go-workers]
