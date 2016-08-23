@@ -6,6 +6,7 @@ go:
   - 1.7
 
 script:
+  - rm -rf $GOPATH/src/github.com/customerio/gospec
   - mkdir -p $GOPATH/src/github.com/customerio
   - git clone -b master https://github.com/customerio/gospec.git $GOPATH/src/github.com/customerio/gospec
   - go test -v
