@@ -98,10 +98,7 @@ func newManager(queue string, job jobFunc, concurrency int, mids ...Action) *man
 	if len(mids) == 0 {
 		customMids = Middleware
 	} else {
-		customMids = NewMiddleware(Middleware.actions...)
-		for _, m := range mids {
-			customMids.Append(m)
-		}
+		customMids = NewMiddleware(mids...)
 	}
 	m := &manager{
 		Config.Namespace + "queue:" + queue,

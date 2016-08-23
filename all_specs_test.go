@@ -19,7 +19,7 @@ func TestAllSpecs(t *testing.T) {
 
 	r.BeforeEach = func() {
 		Configure(map[string]string{
-			"server":   "localhost:6379",
+			"server":   "192.168.99.100:6379",
 			"process":  "1",
 			"database": "15",
 			"pool":     "1",

@@ -55,15 +55,24 @@ func (w *worker) work(messages chan *Msg) {
 }
 
 func (w *worker) process(message *Msg) (acknowledge bool) {
-	acknowledge = true
+	acknowledge = false
 
+	// recover will catch the error in case of unhandled panic
+	// You MUST handle this using middleware
 	defer func() {
 		recover()
 	}()
 
-	return w.manager.mids.call(w.manager.queueName(), message, func() {
-		w.manager.job(message)
+	// We ignore middleware errors here because it must be handle by middleware themself
+	// the acknowledge boolean is only used to say a job have been proceed by this worker
+	// whatever it has been reschedule or failed or succeed
+	w.manager.mids.call(w.manager.queueName(), message, func() error {
+		return w.manager.job(message)
 	})
+
+	acknowledge = true
+
+	return
 }
 
 func (w *worker) processing() bool {

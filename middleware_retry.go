@@ -14,15 +14,25 @@ const (
 
 type MiddlewareRetry struct{}
 
-func (r *MiddlewareRetry) Call(queue string, message *Msg, next func() bool) (acknowledge bool) {
+func (r *MiddlewareRetry) Call(queue string, message *Msg, next func() error) (err error) {
 	defer func() {
-		if e := recover(); e != nil {
-			conn := Config.Pool.Get()
-			defer conn.Close()
 
-			if retry(message) {
-				message.Set("queue", queue)
-				message.Set("error_message", fmt.Sprintf("%v", e))
+		if err == nil {
+			if e := recover(); e != nil {
+				err = fmt.Errorf("%v", e)
+			}
+		}
+
+		if err != nil {
+
+			message.Set("queue", queue)
+			message.Set("error_message", err.Error())
+
+			if !IsFatal(err) && retry(message) {
+
+				conn := Config.Pool.Get()
+				defer conn.Close()
+
 				retryCount := incrementRetry(message)
 
 				waitDuration := durationToSecondsWithNanoPrecision(
@@ -31,7 +41,9 @@ func (r *MiddlewareRetry) Call(queue string, message *Msg, next func() bool) (ac
 					) * time.Second,
 				)
 
-				_, err := conn.Do(
+				message.Set("retry_at", time.Now().UTC().Add(time.Duration(waitDuration)).Format(LAYOUT))
+
+				_, err2 := conn.Do(
 					"zadd",
 					Config.Namespace+RETRY_KEY,
 					nowToSecondsWithNanoPrecision()+waitDuration,
@@ -41,16 +53,17 @@ func (r *MiddlewareRetry) Call(queue string, message *Msg, next func() bool) (ac
 				// If we can't add the job to the retry queue,
 				// then we shouldn't acknowledge the job, otherwise
 				// it'll disappear into the void.
-				if err != nil {
-					acknowledge = false
+				if err2 != nil {
+					err = err2
 				}
+			} else {
+				message.Set("failed_at", time.Now().UTC().Format(LAYOUT))
+				err = Fatal(err)
 			}
-
-			panic(e)
 		}
 	}()
 
-	acknowledge = next()
+	err = next()
 
 	return
 }

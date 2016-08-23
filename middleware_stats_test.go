@@ -1,6 +1,7 @@
 package workers
 
 import (
+	"fmt"
 	"github.com/customerio/gospec"
 	. "github.com/customerio/gospec"
 	"github.com/garyburd/redigo/redis"
@@ -8,8 +9,9 @@ import (
 )
 
 func MiddlewareStatsSpec(c gospec.Context) {
-	var job = (func(message *Msg) {
+	var job = (func(message *Msg) error {
 		// noop
+		return nil
 	})
 
 	layout := "2006-01-02"
@@ -40,8 +42,9 @@ func MiddlewareStatsSpec(c gospec.Context) {
 	})
 
 	c.Specify("failed job", func() {
-		var job = (func(message *Msg) {
-			panic("AHHHH")
+		var job = (func(message *Msg) error {
+			// panic("AHHHH")
+			return fmt.Errorf("AHHHHH")
 		})
 
 		manager := newManager("myqueue", job, 1)

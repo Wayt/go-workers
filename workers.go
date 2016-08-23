@@ -26,6 +26,7 @@ var Middleware = NewMiddleware(
 	&MiddlewareLogging{},
 	&MiddlewareRetry{},
 	&MiddlewareStats{},
+	&MiddlewarePanic{},
 )
 
 func Process(queue string, job jobFunc, concurrency int, mids ...Action) {

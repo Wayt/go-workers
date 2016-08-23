@@ -15,12 +15,12 @@ type customMid struct {
 	mutex sync.Mutex
 }
 
-func (m *customMid) Call(queue string, message *Msg, next func() bool) (result bool) {
+func (m *customMid) Call(queue string, message *Msg, next func() error) (err error) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
 	m.trace = append(m.trace, m.Base+"1")
-	result = next()
+	err = next()
 	m.trace = append(m.trace, m.Base+"2")
 	return
 }
@@ -38,8 +38,9 @@ func (m *customMid) Trace() []string {
 func ManagerSpec(c gospec.Context) {
 	processed := make(chan *Args)
 
-	testJob := (func(message *Msg) {
+	testJob := (func(message *Msg) error {
 		processed <- message.Args()
+		return nil
 	})
 
 	was := Config.Namespace
@@ -70,7 +71,7 @@ func ManagerSpec(c gospec.Context) {
 			mid1 := customMid{Base: "0"}
 			manager := newManager("myqueue", testJob, 10, &mid1)
 			c.Expect(manager.mids, Not(Equals), Middleware)
-			c.Expect(len(manager.mids.actions), Equals, len(Middleware.actions)+1)
+			c.Expect(len(manager.mids.actions), Equals, 1)
 		})
 
 	})
@@ -127,7 +128,7 @@ func ManagerSpec(c gospec.Context) {
 			Middleware = oldMiddleware
 
 			c.Expect(
-				arrayCompare(mid1.Trace(), []string{"11", "12", "11", "12", "11", "12"}),
+				arrayCompare(mid1.Trace(), []string{"11", "12"}),
 				IsTrue,
 			)
 			c.Expect(

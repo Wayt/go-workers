@@ -6,17 +6,13 @@ import (
 
 type MiddlewareStats struct{}
 
-func (l *MiddlewareStats) Call(queue string, message *Msg, next func() bool) (acknowledge bool) {
-	defer func() {
-		if e := recover(); e != nil {
-			incrementStats("failed")
-			panic(e)
-		}
-	}()
+func (l *MiddlewareStats) Call(queue string, message *Msg, next func() error) (err error) {
 
-	acknowledge = next()
-
-	incrementStats("processed")
+	if err = next(); err != nil {
+		incrementStats("failed")
+	} else {
+		incrementStats("processed")
+	}
 
 	return
 }

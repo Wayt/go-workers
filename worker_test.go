@@ -12,17 +12,18 @@ var failMiddlewareCalled bool
 
 type testMiddleware struct{}
 
-func (l *testMiddleware) Call(queue string, message *Msg, next func() bool) (result bool) {
+func (l *testMiddleware) Call(queue string, message *Msg, next func() error) (err error) {
 	testMiddlewareCalled = true
 	return next()
 }
 
 type failMiddleware struct{}
 
-func (l *failMiddleware) Call(queue string, message *Msg, next func() bool) (result bool) {
+func (l *failMiddleware) Call(queue string, message *Msg, next func() error) (err error) {
 	failMiddlewareCalled = true
-	next()
-	return false
+	err = next()
+	panic("fail !")
+	return
 }
 
 func confirm(manager *manager) (msg *Msg) {
@@ -39,8 +40,9 @@ func confirm(manager *manager) (msg *Msg) {
 func WorkerSpec(c gospec.Context) {
 	var processed = make(chan *Args)
 
-	var testJob = (func(message *Msg) {
+	var testJob = (func(message *Msg) error {
 		processed <- message.Args()
+		return nil
 	})
 
 	manager := newManager("myqueue", testJob, 1)
@@ -98,11 +100,12 @@ func WorkerSpec(c gospec.Context) {
 				&MiddlewareLogging{},
 				&MiddlewareRetry{},
 				&MiddlewareStats{},
+				&MiddlewarePanic{},
 			)
 		})
 
 		c.Specify("doesn't confirm if middleware cancels acknowledgement", func() {
-			Middleware.Append(&failMiddleware{})
+			Middleware.Prepend(&failMiddleware{})
 
 			go worker.work(messages)
 			messages <- message
@@ -117,12 +120,14 @@ func WorkerSpec(c gospec.Context) {
 				&MiddlewareLogging{},
 				&MiddlewareRetry{},
 				&MiddlewareStats{},
+				&MiddlewarePanic{},
 			)
 		})
 
 		c.Specify("recovers and confirms if job panics", func() {
-			var panicJob = (func(message *Msg) {
+			var panicJob = (func(message *Msg) error {
 				panic("AHHHHHHHHH")
+				return nil
 			})
 
 			manager := newManager("myqueue", panicJob, 1)
