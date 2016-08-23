@@ -1,5 +1,7 @@
-[![Build Status](https://travis-ci.org/jrallison/go-workers.png)](https://travis-ci.org/jrallison/go-workers)
-[![GoDoc](https://godoc.org/github.com/jrallison/go-workers?status.png)](https://godoc.org/github.com/jrallison/go-workers)
+[![Build Status](https://travis-ci.org/wayt/go-workers.png)](https://travis-ci.org/wayt/go-workers)
+[![GoDoc](https://godoc.org/github.com/wayt/go-workers?status.png)](https://godoc.org/github.com/wayt/go-workers)
+
+Forked from (https://github.com/jrallison/go-workers)[https://github.com/jrallison/go-workers]
 
 [Sidekiq](http://sidekiq.org/) compatible
 background workers in [golang](http://golang.org/).
