@@ -7,7 +7,17 @@ go:
 
 script:
   - go get github.com/customerio/gospec
+  - cd $GOPATH/src/github.com/customerio/gospec
+  - git checkout master
+  - cd -
   - go test -v
 
 services:
   - redis-server
+
+notifications:
+  email:
+    on_success: change
+    on_failure: always
+    on_start: false
+
